@@ -152,6 +152,7 @@ export default function plugin(options: Options = Object.create(null)) {
             logger.debug(
               `${logHash}: Permitting operation found in local registry.`,
             );
+            requestContext.metrics.registeredOperation = true;
             return;
           }
 
@@ -209,6 +210,7 @@ export default function plugin(options: Options = Object.create(null)) {
                 dryRunPrefix} ${logHash}: Execution denied because 'forbidUnregisteredOperations' was enabled for this request and the operation was not found in the local operation registry.`,
             );
 
+            requestContext.metrics.forbiddenOperation = true;
             if (!options.dryRun) {
               throw new ForbiddenError('Execution forbidden');
             } else {
