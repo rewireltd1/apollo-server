@@ -22,6 +22,7 @@ export interface AgentOptions {
   schemaHash: string;
   engine: any;
   store: InMemoryLRUCache;
+  schemaTag: string;
 }
 
 interface Operation {
@@ -35,6 +36,8 @@ interface OperationManifest {
 }
 
 type SignatureStore = Set<string>;
+
+const callToAction = `Ensure this server's schema has been published with 'apollo service:push' and that operations have been registered with 'apollo client:push'.`;
 
 export default class Agent {
   private timer?: NodeJS.Timer;
@@ -183,6 +186,14 @@ export default class Agent {
   };
 
   private async fetchLegacyManifest(): Promise<Response> {
+    this.logger.debug(`Fetching legacy manifest.`);
+    if (this.options.schemaTag !== 'current') {
+      this.logger.warn(
+        `The legacy manifest contains operations registered for the "current" tag, but the specified schema tag is "${
+          this.options.schemaTag
+        }".`,
+      );
+    }
     const legacyManifestUrl = getLegacyOperationManifestUrl(
       this.getHashedServiceId(),
       this.options.schemaHash,
@@ -196,13 +207,14 @@ export default class Agent {
     const storageSecret = await this.fetchAndUpdateStorageSecret();
 
     if (!storageSecret) {
-      this.logger.debug(`No storage secret found`);
+      this.logger.warn(`No storage secret found`);
       return this.fetchLegacyManifest();
     }
 
     const storageSecretManifestUrl = getOperationManifestUrl(
       this.options.engine.serviceID,
       storageSecret,
+      this.options.schemaTag,
     );
 
     this.logger.debug(
@@ -212,7 +224,13 @@ export default class Agent {
       storageSecretManifestUrl,
       this.fetchOptions,
     );
+
     if (response.status === 404 || response.status === 403) {
+      this.logger.warn(
+        `No manifest found for tag "${
+          this.options.schemaTag
+        }" at ${storageSecretManifestUrl}. ${callToAction}`,
+      );
       return this.fetchLegacyManifest();
     }
     return response;
@@ -236,9 +254,7 @@ export default class Agent {
         // The response error code only comes in XML, but we don't have an XML
         // parser handy, so we'll just match the string.
         if (responseText.includes('<Code>AccessDenied</Code>')) {
-          throw new Error(
-            `No manifest found.  Ensure this server's schema has been published with 'apollo service:push' and that operations have been registered with 'apollo client:push'.`,
-          );
+          throw new Error(`No manifest found. ${callToAction}`);
         }
         // For other unknown errors.
         throw new Error(`Unexpected status: ${responseText}`);

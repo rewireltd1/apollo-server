@@ -28,6 +28,7 @@ const defaultAgentOptions: AgentOptions = {
   engine: { serviceID: genericServiceID, apiKeyHash: genericApiKeyHash },
   store: defaultStore(),
   pollSeconds,
+  schemaTag: 'current',
 };
 
 interface ManifestRecord {
@@ -55,6 +56,11 @@ const sampleManifestRecords: Record<string, ManifestRecord> = {
     document: '{nooks:books{__typename author}}',
   },
 };
+
+const manifest = (...operations: ManifestRecord[]) => ({
+  version: 2,
+  operations,
+});
 
 describe('Agent', () => {
   describe('Basic', () => {
@@ -261,6 +267,15 @@ describe('Agent', () => {
         const relevantLogs: any = [];
         const logger = {
           debug: jest.fn().mockImplementation((...args: any[]) => {
+            if (
+              typeof args[0] === 'string' &&
+              (args[0].match(/Checking for manifest changes/) ||
+                args[0].match(/Incoming manifest ADDs/))
+            ) {
+              relevantLogs.push(args);
+            }
+          }),
+          warn: jest.fn().mockImplementation((...args: any[]) => {
             if (
               typeof args[0] === 'string' &&
               (args[0].match(/Checking for manifest changes/) ||
@@ -494,6 +509,33 @@ describe('Agent', () => {
 
           // Only the initial start-up check should have happened by now.
           expect(agent._timesChecked).toBe(1);
+        });
+      });
+
+      describe('When given a schemaTag', () => {
+        const schemaTag = 'master';
+        const getOperationManifestRelativeUrl = (
+          ...args: Parameters<typeof getOperationManifestUrl>
+        ) =>
+          getOperationManifestUrl(...args).replace(
+            new RegExp(`^${urlOperationManifestBase}`),
+            '',
+          );
+
+        it('fetches manifests for the corresponding schema tag', async () => {
+          nockStorageSecret();
+          const agent = createAgent({ schemaTag });
+          const nockedManifest = nockBase()
+            .get(
+              getOperationManifestRelativeUrl(
+                genericServiceID,
+                genericStorageSecret,
+                schemaTag,
+              ),
+            )
+            .reply(200, manifest(sampleManifestRecords.a));
+          await agent.checkForUpdate();
+          expect(nockedManifest.isDone()).toBe(true);
         });
       });
     });
