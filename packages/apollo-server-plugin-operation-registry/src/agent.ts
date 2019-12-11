@@ -12,6 +12,7 @@ import loglevel from 'loglevel';
 import { Response } from 'node-fetch';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { fetchIfNoneMatch } from './fetchIfNoneMatch';
+import { OperationManifest } from "./ApolloServerPluginOperationRegistry";
 
 const DEFAULT_POLL_SECONDS: number = 30;
 const SYNC_WARN_TIME_SECONDS: number = 60;
@@ -23,16 +24,6 @@ export interface AgentOptions {
   engine: any;
   store: InMemoryLRUCache;
   schemaTag: string;
-}
-
-interface Operation {
-  signature: string;
-  document: string;
-}
-
-interface OperationManifest {
-  version: number;
-  operations: Array<Operation>;
 }
 
 type SignatureStore = Set<string>;
@@ -102,7 +93,7 @@ export default class Agent {
       await pulse();
     } catch (err) {
       console.error(
-        'The operation manifest could not be fetched.  Retries will continue, but requests will be forbidden until the manifest is fetched.',
+        'The operation manifest could not be fetched. Retries will continue, but requests will be forbidden until the manifest is fetched.',
         err.message || err,
       );
     }

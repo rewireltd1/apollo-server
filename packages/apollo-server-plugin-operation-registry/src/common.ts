@@ -6,11 +6,15 @@ export const envOverrideOperationManifest =
 
 export const envOverrideStorageSecretBaseUrl = 'APOLLO_STORAGE_SECRET_BASE_URL';
 
+export const fakeTestBaseUrl = 'https://fake-host-for-apollo-op-reg-tests/';
+
 // Generate and cache our desired operation manifest URL.
 export const urlOperationManifestBase: string = ((): string => {
   const desiredUrl =
     process.env[envOverrideOperationManifest] ||
-    'https://storage.googleapis.com/engine-op-manifest-storage-prod/';
+    process.env['NODE_ENV'] === 'test'
+      ? fakeTestBaseUrl
+      : 'https://storage.googleapis.com/engine-op-manifest-storage-prod/';
 
   // Make sure it has NO trailing slash.
   return desiredUrl.replace(/\/$/, '');
@@ -20,7 +24,9 @@ export const urlOperationManifestBase: string = ((): string => {
 export const urlStorageSecretBase: string = ((): string => {
   const desiredUrl =
     process.env[envOverrideStorageSecretBaseUrl] ||
-    'https://storage.googleapis.com/engine-partial-schema-prod/';
+    process.env['NODE_ENV'] === 'test'
+      ? fakeTestBaseUrl
+      : 'https://storage.googleapis.com/engine-partial-schema-prod/';
 
   // Make sure it has NO trailing slash.
   return desiredUrl.replace(/\/$/, '');
@@ -58,9 +64,9 @@ export function getLegacyOperationManifestUrl(
   );
 }
 
-export function hashForLogging(hash: string): string {
-  if (typeof hash !== 'string') {
+export function signatureForLogging(signature: string): string {
+  if (typeof signature !== 'string') {
     return '<non-string>';
   }
-  return hash.substring(0, 8);
+  return signature.substring(0, 8);
 }
