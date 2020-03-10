@@ -9,7 +9,7 @@ describe('common', () => {
     expect(
       common.getLegacyOperationManifestUrl('aServiceId', 'aSchemaHash'),
     ).toMatchInlineSnapshot(
-      `"https://storage.googleapis.com/engine-op-manifest-storage-prod/aServiceId/aSchemaHash.v2.json"`,
+      `"https://fake-host-for-apollo-op-reg-tests/aServiceId/aSchemaHash.v2.json"`,
     );
   });
 });
