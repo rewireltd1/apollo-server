@@ -1,29 +1,29 @@
 import {
   GraphQLRequestContext,
-  Logger,
   InvalidGraphQLRequestError,
-} from 'apollo-server-types';
-import { Headers } from 'apollo-server-env';
-import { GraphQLError } from 'graphql';
-import { Trace } from 'apollo-engine-reporting-protobuf';
+  Logger
+} from "apollo-server-types";
+import { Headers } from "apollo-server-env";
+import { GraphQLError, GraphQLSchema, printSchema } from "graphql";
+import { Trace } from "apollo-engine-reporting-protobuf";
 
 import {
+  AddTraceArgs,
   EngineReportingOptions,
   GenerateClientInfo,
-  AddTraceArgs,
-  VariableValueOptions,
   SendValuesBaseOptions,
-} from './agent';
-import { EngineReportingTreeBuilder } from './treeBuilder';
+  VariableValueOptions
+} from "./agent";
+import { EngineReportingTreeBuilder } from "./treeBuilder";
 import { ApolloServerPlugin } from "apollo-server-plugin-base";
 import {
   PersistedQueryNotFoundError,
-  PersistedQueryNotSupportedError,
-} from 'apollo-server-errors';
+  PersistedQueryNotSupportedError
+} from "apollo-server-errors";
 
-const clientNameHeaderKey = 'apollographql-client-name';
-const clientReferenceIdHeaderKey = 'apollographql-client-reference-id';
-const clientVersionHeaderKey = 'apollographql-client-version';
+const clientNameHeaderKey = "apollographql-client-name";
+const clientReferenceIdHeaderKey = "apollographql-client-reference-id";
+const clientVersionHeaderKey = "apollographql-client-version";
 
 // This plugin is instantiated once at server start-up. Each request that the
 // server processes will invoke the `requestDidStart` method which will produce
@@ -34,7 +34,14 @@ const clientVersionHeaderKey = 'apollographql-client-version';
 export const plugin = <TContext>(
   options: EngineReportingOptions<TContext> = Object.create(null),
   addTrace: (args: AddTraceArgs) => Promise<void>,
-  // schemaHash: string,
+  startSchemaReporting: (
+    { executableSchema, executableSchemaId }:
+      { executableSchema: string, executableSchemaId: string }
+  ) => void,
+  overrideReportedSchema:
+    { schemaDocument: string, schemaId: string } | null,
+  schemaIdGenerator:
+    (schema: string | GraphQLSchema) => string,
 ): ApolloServerPlugin<TContext> => {
   const logger: Logger = options.logger || console;
   const generateClientInfo: GenerateClientInfo<TContext> =
@@ -42,15 +49,25 @@ export const plugin = <TContext>(
 
 
   return {
+    serverWillStart: function({ schema }) {
+      if (options.experimental__schemaReporting) {
+        startSchemaReporting({
+          executableSchema: overrideReportedSchema?.schemaDocument || printSchema(schema),
+          executableSchemaId: overrideReportedSchema?.schemaId || schemaIdGenerator(schema),
+        });
+      }
+    },
     requestDidStart(requestContext) {
       // We still need the entire `requestContext` to pass through to the
       // `generateClientInfo` method, but we'll destructure for brevity within.
       const {
         metrics,
         logger: requestLogger,
-        schemaHash,
-        request: { http, variables },
+        schema,
+        request: { http, variables }
       } = requestContext;
+
+
 
       const treeBuilder: EngineReportingTreeBuilder =
         new EngineReportingTreeBuilder({
@@ -152,7 +169,7 @@ export const plugin = <TContext>(
           document: requestContext.document,
           source: requestContext.source,
           trace: treeBuilder.trace,
-          schemaHash,
+          schemaId: overrideReportedSchema?.schemaId || schemaIdGenerator(schema),
         });
       }
 
@@ -219,15 +236,11 @@ function allUnreportableSpecialCasedErrors(
   errors: readonly GraphQLError[],
 ): boolean {
   return errors.every(err => {
-    if (
-      err instanceof PersistedQueryNotFoundError ||
+    return err instanceof PersistedQueryNotFoundError ||
       err instanceof PersistedQueryNotSupportedError ||
-      err instanceof InvalidGraphQLRequestError
-    ) {
-      return true;
-    }
+      err instanceof InvalidGraphQLRequestError;
 
-    return false;
+
   });
 }
 
