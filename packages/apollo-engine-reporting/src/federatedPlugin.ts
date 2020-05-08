@@ -1,9 +1,12 @@
 import { Trace } from 'apollo-engine-reporting-protobuf';
 import { EngineReportingTreeBuilder } from './treeBuilder';
-import { ApolloServerPlugin } from "apollo-server-plugin-base";
-import { EngineReportingOptions } from "./agent";
+import { ApolloServerPlugin } from 'apollo-server-plugin-base';
+import { EngineReportingOptions } from './agent';
 
-type FederatedReportingOptions<TContext> = Pick<EngineReportingOptions<TContext>, 'rewriteError'>
+type FederatedReportingOptions<TContext> = Pick<
+  EngineReportingOptions<TContext>,
+  'rewriteError'
+>;
 
 // This ftv1 plugin produces a base64'd Trace protobuf containing only the
 // durationNs, startTime, endTime, and root fields.  This output is placed
@@ -15,10 +18,11 @@ const federatedPlugin = <TContext>(
 ): ApolloServerPlugin<TContext> => {
   return {
     requestDidStart({ request: { http } }) {
-      const treeBuilder: EngineReportingTreeBuilder =
-        new EngineReportingTreeBuilder({
+      const treeBuilder: EngineReportingTreeBuilder = new EngineReportingTreeBuilder(
+        {
           rewriteError: options.rewriteError,
-        });
+        },
+      );
 
       // XXX Provide a mechanism to customize this logic.
       if (http?.headers.get('apollo-federation-include-trace') !== 'ftv1') {
@@ -29,7 +33,7 @@ const federatedPlugin = <TContext>(
 
       return {
         willResolveField(...args) {
-          const [ , , , info] = args;
+          const [, , , info] = args;
           return treeBuilder.willResolveField(info);
         },
 
@@ -52,15 +56,15 @@ const federatedPlugin = <TContext>(
           const extensions =
             response.extensions || (response.extensions = Object.create(null));
 
-          if (typeof extensions.ftv1 !== "undefined") {
-            throw new Error("The `ftv1` `extensions` were already present.");
+          if (typeof extensions.ftv1 !== 'undefined') {
+            throw new Error('The `ftv1` `extensions` were already present.');
           }
 
           extensions.ftv1 = encodedBuffer.toString('base64');
-        }
-      }
+        },
+      };
     },
-  }
+  };
 };
 
 export default federatedPlugin;
