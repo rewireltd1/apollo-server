@@ -24,7 +24,7 @@ import { GraphQLRequestContext, Logger } from 'apollo-server-types';
 import { InMemoryLRUCache } from 'apollo-server-caching';
 import { defaultEngineReportingSignature } from 'apollo-graphql';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
-import { reportingLoop, SchemaReporter } from './schemaReporting';
+import { reportingLoop, SchemaReporter } from './schemaReporter';
 import { v4 as uuidv4 } from 'uuid';
 import { sha256 } from 'sha.js';
 
