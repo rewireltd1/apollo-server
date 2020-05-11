@@ -71,7 +71,7 @@ export class SchemaReporter {
   private readonly executableSchemaDocument: any;
   private isStopped: boolean;
 
-  constructor(serverInfo: EdgeServerInfo, schemaSdl: string, apiKey: string) {
+  constructor(serverInfo: EdgeServerInfo, schemaSdl: string, apiKey: string, reportingEndpoint: string | undefined) {
     if (apiKey === '') {
       throw new Error('No api key defined');
     }
@@ -80,8 +80,8 @@ export class SchemaReporter {
 
     this.graphManagerHttpLink = new HttpLink({
       uri:
-        process.env.GRAPH_MANAGER_URL ||
-        'https://engine-staging-graphql.apollographql.com/api/graphql',
+        reportingEndpoint ||
+        'https://engine-graphql.apollographql.com/api/graphql',
       fetch,
       headers: { 'x-api-key': this.apiKey },
     });
@@ -102,7 +102,6 @@ export class SchemaReporter {
   public async reportServerInfo(
     withExecutableSchema: boolean,
   ): Promise<ReportServerInfoReturnVal> {
-    // This technically queries kotlin instead of gateway but that is fine for now.
     const { data, errors } = await this.graphManagerQuery<
       AutoregReportServerInfo
     >(reportServerInfoGql, {

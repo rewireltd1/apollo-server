@@ -223,7 +223,7 @@ export interface EngineReportingOptions<TContext> {
   /**
    * The URL of the graph manager schema reporting ingress
    */
-  schemaEndpointUrl?: string;
+  schemaReportingUrl?: string;
 
   /**
    * A logger interface to be used for output and errors.  When not provided
@@ -329,6 +329,7 @@ export class EngineReportingAgent<TContext = any> {
       this.schemaIdGenerator = (schema: string | GraphQLSchema) => {
         let graphQLSchema =
           typeof schema === 'string' ? buildSchema(schema) : schema;
+
         return new sha256()
           .update(
             stripIgnoredCharacters(
@@ -581,6 +582,7 @@ export class EngineReportingAgent<TContext = any> {
       serverInfo,
       executableSchema,
       this.apiKey,
+      this.options.schemaReportingUrl
     );
 
     const fallbackReportingDelayInMs = 20_000;
