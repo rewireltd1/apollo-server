@@ -1,6 +1,6 @@
 {
   "name": "@rewireltd/apollo-server-express",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Production-ready Node.js GraphQL server for Express and Connect",
   "main": "dist/index.js",
   "scripts": {
@@ -26,7 +26,7 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
-    "@rewireltd/apollo-server-core": "1.4.1",
+    "@rewireltd/apollo-server-core": "1.4.3",
     "apollo-server-module-graphiql": "^1.4.0"
   },
   "devDependencies": {
