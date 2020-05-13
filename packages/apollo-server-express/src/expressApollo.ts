@@ -4,7 +4,7 @@ import {
   GraphQLOptions,
   HttpQueryError,
   runHttpQuery,
-} from 'apollo-server-core';
+} from '@rewireltd/apollo-server-core';
 import * as GraphiQL from 'apollo-server-module-graphiql';
 
 export interface ExpressGraphQLOptionsFunction {

@@ -1,6 +1,6 @@
 {
-  "name": "apollo-server-core",
-  "version": "1.4.0",
+  "name": "@rewireltd/apollo-server-core",
+  "version": "1.4.2",
   "description": "Core engine for Apollo GraphQL server",
   "main": "dist/index.js",
   "scripts": {
@@ -25,9 +25,7 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "devDependencies": {
-    "@types/fibers": "0.0.30",
     "@types/graphql": "0.12.7",
-    "fibers": "1.0.15",
     "meteor-promise": "0.8.6",
     "typescript": "2.8.4"
   },
