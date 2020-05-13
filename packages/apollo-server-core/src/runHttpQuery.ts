@@ -203,6 +203,7 @@ export async function runHttpQuery(
         debug: optionsObject.debug,
         tracing: optionsObject.tracing,
         cacheControl: optionsObject.cacheControl,
+        onQueryExecuted: optionsObject.onQueryExecuted,
       };
 
       if (optionsObject.formatParams) {

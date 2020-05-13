@@ -64,6 +64,7 @@ export interface QueryOptions {
   logFunction?: LogFunction;
   validationRules?: Array<(context: ValidationContext) => any>;
   fieldResolver?: GraphQLFieldResolver<any, any>;
+  onQueryExecuted?: Function;
   // WARNING: these extra validation rules are only applied to queries
   // submitted as string, not those submitted as Document!
 
@@ -108,6 +109,8 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
     function() {
       return null;
     };
+
+  const onQueryExecuted  = options.onQueryExecuted || function() {};
   const debugDefault =
     process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
   const debug = options.debug !== undefined ? options.debug : debugDefault;
@@ -227,7 +230,7 @@ function doRunQuery(options: QueryOptions): Promise<GraphQLResponse> {
       if (options.formatResponse) {
         response = options.formatResponse(response, options);
       }
-
+      onQueryExecuted({ options, data: response.extensions})
       return response;
     });
   } catch (executionError) {

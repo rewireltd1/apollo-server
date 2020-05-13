@@ -35,6 +35,7 @@ export interface GraphQLServerOptions<TContext = any> {
   debug?: boolean;
   tracing?: boolean;
   cacheControl?: boolean | CacheControlExtensionOptions;
+  onQueryExecuted?: Function;
 }
 
 export default GraphQLServerOptions;
