@@ -189,6 +189,7 @@ export async function runHttpQuery(
       }
 
       let params = {
+        summaryTimer: optionsObject.summaryTimer || function() {},
         schema: optionsObject.schema,
         query: query,
         variables: variables,
